@@ -1,0 +1,5 @@
+web_packages:
+  - httpd
+common_packages:
+  - wget
+  - curl

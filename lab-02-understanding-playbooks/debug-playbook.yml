@@ -1,0 +1,11 @@
+---
+- name: Debug playbook variables
+  hosts: managed_nodes
+  gather_facts: yes
+  tasks:
+    - name: Display specific facts
+      debug:
+        msg: |
+          Hostname: {{ ansible_hostname }}
+          IP Address: {{ ansible_default_ipv4.address | default('127.0.0.1') }}
+          OS: {{ ansible_distribution }}

@@ -1,0 +1,33 @@
+---
+- name: Playbook with error handling
+  hosts: managed_nodes
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Attempt to install a package that might fail
+      package:
+        name: non-existent-package
+        state: present
+      ignore_errors: yes
+      register: package_result
+      
+    - name: Display error message if package installation failed
+      debug:
+        msg: "Package installation failed gracefully: {{ package_result.msg | default('Failed') }}"
+      when: package_result.failed is defined and package_result.failed
+      
+    - name: Use block/rescue for complex error handling
+      block:
+        - name: Try to start a service that might not exist
+          service:
+            name: non-existent-service
+            state: started
+      rescue:
+        - name: Handle the error gracefully
+          debug:
+            msg: "Service start failed, handled inside rescue block."
+      always:
+        - name: This always runs
+          debug:
+            msg: "Cleanup task always executes."

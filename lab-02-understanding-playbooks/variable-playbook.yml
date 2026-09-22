@@ -1,0 +1,18 @@
+---
+- name: Playbook using external variables
+  hosts: managed_nodes
+  become: yes
+  vars_files:
+    - vars.yml
+    
+  tasks:
+    - name: Install web packages
+      package:
+        name: "{{ web_packages }}"
+        state: present
+      when: inventory_hostname in groups['web_servers']
+      
+    - name: Install common packages on all hosts
+      package:
+        name: "{{ common_packages }}"
+        state: present
