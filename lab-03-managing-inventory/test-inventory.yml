@@ -1,0 +1,12 @@
+---
+- name: Test Inventory Configuration
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Display host information
+      debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          IP: {{ ansible_host | default('N/A') }}
+          User: {{ ansible_user | default('N/A') }}
+          Group: {{ group_names }}
