@@ -1,0 +1,29 @@
+# System Information Configuration
+# Generated on {{ ansible_date_time.date | default('2026-09-23') }} at {{ ansible_date_time.time | default('08:00:00') }}
+
+# Server Details
+HOSTNAME={{ inventory_hostname }}
+SERVER_IP={{ ansible_default_ipv4.address | default('127.0.0.1') }}
+TOTAL_MEMORY={{ ansible_memtotal_mb | default(2048) }}MB
+CPU_CORES={{ ansible_processor_vcpus | default(2) }}
+OS_FAMILY={{ ansible_os_family | default('RedHat') }}
+OS_VERSION={{ ansible_distribution_version | default('8.0') }}
+
+# Environment Configuration
+ENVIRONMENT={{ environment | default('production') }}
+APPLICATION_PORT={{ app_port | default(8080) }}
+MAX_CONNECTIONS={{ max_connections | default(100) }}
+
+# Feature Flags
+{% if feature_flags is defined %}
+{% for feature, enabled in feature_flags.items() %}
+{{ feature | upper }}_ENABLED={{ enabled | string | lower }}
+{% endfor %}
+{% endif %}
+
+# Custom Variables
+{% if custom_vars is defined %}
+{% for key, value in custom_vars.items() %}
+{{ key | upper }}={{ value }}
+{% endfor %}
+{% endif %}
