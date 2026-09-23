@@ -1,0 +1,49 @@
+---
+- name: Loop Control Demo
+  hosts: all
+  gather_facts: yes
+  vars:
+    packages_to_install:
+      - name: "git"
+        required: true
+      - name: "vim"
+        required: false
+      - name: "tree"
+        required: true
+        
+  tasks:
+    - name: Install only required packages
+      package:
+        name: "{{ item.name }}"
+        state: present
+      loop: "{{ packages_to_install }}"
+      when: item.required == true
+      
+    - name: Create numbered backup directories
+      file:
+        path: "/opt/backup-{{ custom_index }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - daily
+        - weekly
+        - monthly
+      loop_control:
+        index_var: custom_index
+        
+    - name: Process items with custom loop variable name
+      debug:
+        msg: "Processing {{ current_item.name }} (Required: {{ current_item.required }})"
+      loop: "{{ packages_to_install }}"
+      loop_control:
+        loop_var: current_item
+        
+    - name: Display items with pause between logs
+      debug:
+        msg: "Pausing after checking package: {{ item }}"
+      loop:
+        - curl
+        - wget
+        - rsync
+      loop_control:
+        pause: 1
