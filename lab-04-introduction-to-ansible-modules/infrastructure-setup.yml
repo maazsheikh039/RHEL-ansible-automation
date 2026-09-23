@@ -1,0 +1,92 @@
+---
+- name: Complete Infrastructure Setup
+  hosts: all
+  become: yes
+  vars:
+    web_packages_redhat:
+      - httpd
+      - mod_ssl
+      - firewalld
+    web_packages_debian:
+      - apache2
+      - ssl-cert
+      - ufw
+    common_packages:
+      - git
+      - wget
+      - curl
+      - vim
+      - htop
+  
+  tasks:
+    - name: Update package cache for RedHat
+      yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+    
+    - name: Update apt cache for Debian
+      apt:
+        update_cache: yes
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+    
+    - name: Install common packages
+      package:
+        name: "{{ common_packages }}"
+        state: present
+    
+    - name: Install web server packages on Red Hat family
+      yum:
+        name: "{{ web_packages_redhat }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+    
+    - name: Install web server packages on Debian family
+      apt:
+        name: "{{ web_packages_debian }}"
+        state: present
+      when: ansible_os_family == "Debian"
+    
+    - name: Start and enable web server
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: started
+        enabled: yes
+    
+    - name: Start and enable firewall
+      service:
+        name: "{{ 'firewalld' if ansible_os_family == 'RedHat' else 'ufw' }}"
+        state: started
+        enabled: yes
+    
+    - name: Create a simple index page
+      copy:
+        content: |
+          <html>
+          <head><title>Ansible Managed Server</title></head>
+          <body>
+          <h1>Welcome to {{ inventory_hostname }}</h1>
+          <p>This server is managed by Ansible</p>
+          <p>OS Family: {{ ansible_os_family | default('Linux') }}</p>
+          <p>Distribution: {{ ansible_distribution | default('Generic') }}</p>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        owner: "{{ 'apache' if ansible_os_family == 'RedThis lab manual provides a thorough, structured walkthrough for mastering core Ansible modules across different Linux environments. 
+
+### Key Practical Insights & Enhancements for Your Workflows
+
+While the lab steps are completely functional as provided, keep the following production best practices in mind when executing or adapting these playbooks:
+
+#### 1. Modernizing Red Hat Package Management (`dnf` vs `yum`)
+In modern RHEL, CentOS 8+, Fedora, and Rocky/AlmaLinux, `dnf` has replaced `yum`. While `yum` acts as a symlink/wrapper for `dnf` on newer systems, it is generally recommended to use the **`package`** module or explicit **`dnf`** module for modern RHEL deployments.
+
+#### 2. Cross-Platform Abstraction using `ansible.builtin.package`
+In **Task 3.1** and **Task 4.1**, you used the generic `package` module. This module automatically detects the underlying package manager (`apt`, `dnf`, `yum`, `zypper`, etc.) based on host facts, reducing the need for explicit conditional blocks (`when: ansible_os_family == "RedHat"`) for simple package installs.
+
+#### 3. Best Practices Summary
+* **Idempotency:** Always specify `state: present` (or `started`) rather than running commands directly via `shell` or `command` modules.
+* **Syntax Validation:** Always run syntax checks before executing against live inventory:
+  ```bash
+  ansible-playbook --syntax-check infrastructure-setup.yml
