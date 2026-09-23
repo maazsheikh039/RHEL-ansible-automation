@@ -1,0 +1,41 @@
+---
+- name: Configure Firewall Rich Rules
+  hosts: all
+  become: yes
+  tasks:
+    - name: Allow HTTP traffic strictly from 10.0.0.0/8 network
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.0.0.0/8" service name="http" accept'
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Explicitly drop SSH access from specific IP
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="192.168.1.100" service name="ssh" drop'
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Rate limit SSH connections to mitigate brute-force
+      ansible.posix.firewalld:
+        rich_rule: 'rule service name="ssh" accept limit value="3/m"'
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Log dropped packets on HTTP port 80
+      ansible.posix.firewalld:
+        rich_rule: 'rule port port="80" protocol="tcp" log prefix="HTTP-DROP: " level="info" drop'
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: List all active rich rules
+      command: firewall-cmd --list-rich-rules
+      register: rich_rules_output
+      changed_when: false
+
+    - name: Display configured rich rules
+      debug:
+        msg: "{{ rich_rules_output.stdout_lines }}"

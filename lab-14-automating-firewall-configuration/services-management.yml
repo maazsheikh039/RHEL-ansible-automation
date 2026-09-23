@@ -1,0 +1,66 @@
+---
+- name: Manage Firewall Services & Custom XML Definitions
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Enable web and core services in public zone
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+        zone: public
+      loop:
+        - http
+        - https
+        - dns
+
+    - name: Create custom service definitions directory
+      file:
+        path: /etc/firewalld/services
+        state: directory
+        mode: '0755'
+
+    - name: Deploy custom application XML service definition
+      copy:
+        content: |
+          <?xml version="1.0" encoding="utf-8"?>
+          <service>
+            <short>Custom App</short>
+            <description>Custom Enterprise Application running on 8080/8443</description>
+            <port protocol="tcp" port="8080"/>
+            <port protocol="tcp" port="8443"/>
+          </service>
+        dest: /etc/firewalld/services/custom-app.xml
+        mode: '0644'
+
+    - name: Reload firewalld to index new XML service definition
+      command: firewall-cmd --reload
+
+    - name: Enable custom application service in public zone
+      ansible.posix.firewalld:
+        service: custom-app
+        zone: public
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Disable legacy/unnecessary management services
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: disabled
+        immediate: yes
+      loop:
+        - cockpit
+        - dhcpv6-client
+      ignore_errors: yes
+
+    - name: Check enabled services in public zone
+      command: firewall-cmd --zone=public --list-services
+      register: enabled_services
+      changed_when: false
+
+    - name: Display enabled public services
+      debug:
+        msg: "Enabled public services: {{ enabled_services.stdout }}"

@@ -1,0 +1,37 @@
+---
+- name: Troubleshoot Firewalld Service and Dependencies
+  hosts: all
+  become: yes
+  tasks:
+    - name: Inspect package facts
+      package_facts:
+        manager: auto
+
+    - name: Install firewalld if missing
+      package:
+        name: firewalld
+        state: present
+      when: "'firewalld' not in ansible_facts.packages"
+
+    - name: Stop conflicting raw iptables service if active
+      systemd:
+        name: iptables
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+
+    - name: Unmask, start and enable firewalld service
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+        masked: no
+
+    - name: Verify active firewalld status
+      command: systemctl status firewalld
+      register: firewalld_status
+      changed_when: false
+
+    - name: Display firewalld daemon status
+      debug:
+        msg: "{{ firewalld_status.stdout_lines }}"

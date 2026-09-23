@@ -1,0 +1,104 @@
+---
+- name: Implement Comprehensive Role-Based Security Policy
+  hosts: all
+  become: yes
+  vars:
+    web_hosts: ['node1']
+    db_hosts: ['node2']
+
+  tasks:
+    - name: Web Server Role Policy Configuration
+      block:
+        - name: Ensure public zone default state for web
+          ansible.posix.firewalld:
+            zone: public
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+        - name: Allow standard public web services
+          ansible.posix.firewalld:
+            zone: public
+            service: "{{ item }}"
+            permanent: yes
+            state: enabled
+            immediate: yes
+          loop:
+            - http
+            - https
+            - ssh
+
+        - name: Open alternative web ports
+          ansible.posix.firewalld:
+            zone: public
+            port: "{{ item }}"
+            permanent: yes
+            state: enabled
+            immediate: yes
+          loop:
+            - 8080/tcp
+            - 8443/tcp
+      when: inventory_hostname in web_hosts
+
+    - name: Database Server Role Policy Configuration
+      block:
+        - name: Ensure internal zone exists for database tier
+          ansible.posix.firewalld:
+            zone: internal
+            permanent: yes
+            state: present
+
+        - name: Allow SSH for administrative access
+          ansible.posix.firewalld:
+            zone: internal
+            service: ssh
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+        - name: Restrict MySQL 3306 port exclusively to Web Server IP
+          ansible.posix.firewalld:
+            zone: internal
+            rich_rule: 'rule family="ipv4" source address="192.168.1.10" port port="3306" protocol="tcp" accept'
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+        - name: Explicitly drop general database connection attempts
+          ansible.posix.firewalld:
+            zone: internal
+            rich_rule: 'rule port port="3306" protocol="tcp" drop'
+            permanent: yes
+            state: enabled
+            immediate: yes
+      when: inventory_hostname in db_hosts
+
+    - name: Global Infrastructure Hardening
+      block:
+        - name: Block legacy insecure services/ports globally
+          ansible.posix.firewalld:
+            port: "{{ item }}"
+            permanent: yes
+            state: disabled
+            immediate: yes
+          loop:
+            - 23/tcp    # Telnet
+            - 135/tcp   # RPC
+            - 139/tcp   # NetBIOS
+            - 445/tcp   # SMB
+
+        - name: Enable global drop packet logging
+          ansible.posix.firewalld:
+            rich_rule: 'rule drop log prefix="GLOBAL-FIREWALL-DROP: " level="info"'
+            permanent: yes
+            state: enabled
+            immediate: yes
+
+    - name: Verify active server firewall state
+      command: firewall-cmd --list-all
+      register: final_config
+      changed_when: false
+
+    - name: Display final active policy
+      debug:
+        msg: "{{ final_config.stdout_lines }}"

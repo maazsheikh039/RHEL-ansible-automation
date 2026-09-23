@@ -1,0 +1,60 @@
+---
+- name: Test Firewall Compliance and Backup Configurations
+  hosts: all
+  become: yes
+  tasks:
+    - name: Probe active SSH port 22
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        timeout: 3
+      delegate_to: localhost
+      ignore_errors: yes
+      register: ssh_test
+
+    - name: Probe HTTP port 80
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 80
+        timeout: 3
+      delegate_to: localhost
+      ignore_errors: yes
+      register: http_test
+
+    - name: Verify Telnet port 23 is blocked
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 23
+        timeout: 3
+      delegate_to: localhost
+      ignore_errors: yes
+      register: telnet_test
+
+    - name: Generate Security Test Audit Report
+      debug:
+        msg:
+          - "================ Audit Report: {{ inventory_hostname }} ================"
+          - "SSH (Port 22) Status  : {{ 'OPEN (PASS)' if not ssh_test.failed else 'BLOCKED (FAIL)' }}"
+          - "HTTP (Port 80) Status : {{ 'OPEN (PASS)' if not http_test.failed else 'BLOCKED (RESTRICTED)' }}"
+          - "Telnet (Port 23) State: {{ 'SECURE - BLOCKED (PASS)' if telnet_test.failed else 'SECURITY RISK - OPEN (FAIL)' }}"
+
+    - name: Dump full active firewall configuration
+      command: firewall-cmd --list-all
+      register: firewall_dump
+      changed_when: false
+
+    - name: Write remote backup file
+      copy:
+        content: |
+          # Firewall Audit Backup
+          # Host: {{ inventory_hostname }}
+          # Date: {{ ansible_date_time.iso8601 }}
+          {{ firewall_dump.stdout }}
+        dest: "/tmp/firewall-backup-{{ inventory_hostname }}.txt"
+        mode: '0644'
+
+    - name: Fetch firewall backup to control node
+      fetch:
+        src: "/tmp/firewall-backup-{{ inventory_hostname }}.txt"
+        dest: "~/firewall-lab/backups/{{ inventory_hostname }}-firewall.backup"
+        flat: yes
