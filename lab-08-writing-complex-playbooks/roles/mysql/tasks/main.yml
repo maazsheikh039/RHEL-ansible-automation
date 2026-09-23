@@ -1,0 +1,41 @@
+- name: Create MySQL configuration file
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+    backup: yes
+  notify: restart mysql
+
+- name: Set MySQL root password
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    state: present
+  ignore_errors: yes
+  notify: restart mysql
+
+- name: Create application database
+  mysql_db:
+    name: "{{ mysql_database }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  ignore_errors: yes
+
+- name: Create application user
+  mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    priv: "{{ mysql_database }}.*:ALL"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+  ignore_errors: yes
+
+- name: Configure firewall for MySQL
+  firewalld:
+    port: 3306/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+  ignore_errors: yes

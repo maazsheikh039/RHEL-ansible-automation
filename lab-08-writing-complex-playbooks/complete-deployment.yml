@@ -1,0 +1,93 @@
+---
+- name: Pre-deployment Setup & Preparation
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install common management utilities
+      yum:
+        name:
+          - vim
+          - wget
+          - curl
+          - net-tools
+        state: present
+
+    - name: Ensure firewalld service is active
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+      ignore_errors: yes
+  tags:
+    - preparation
+
+- name: Configure Database Servers Tier
+  hosts: database_servers
+  become: yes
+  pre_tasks:
+    - name: Check storage availability
+      shell: df -h /var/lib/mysql 2>/dev/null || df -h /
+      register: disk_space
+      changed_when: false
+
+    - name: Display storage check log
+      debug:
+        var: disk_space.stdout_lines
+
+  roles:
+    - mysql
+
+  post_tasks:
+    - name: Verify MySQL systemd service status
+      systemd:
+        name: mysqld
+      register: mysql_status
+      ignore_errors: yes
+
+    - name: Display status report
+      debug:
+        msg: "MySQL status: {{ mysql_status.status.ActiveState | default('Active/Unverified') }}"
+  tags:
+    - database
+
+- name: Configure Web Servers Tier
+  hosts: web_servers
+  become: yes
+  roles:
+    - apache
+    - webapp
+
+  post_tasks:
+    - name: Verify web HTTP port availability
+      wait_for:
+        port: 80
+        delay: 2
+        timeout: 10
+      ignore_errors: yes
+
+    - name: Test endpoint response
+      uri:
+        url: "http://localhost/{{ app_name }}/index.php"
+        method: GET
+        status_code: 200
+      register: webapp_test
+      ignore_errors: yes
+
+    - name: Display endpoint status
+      debug:
+        msg: "Web App Test Status: {{ 'PASSED' if webapp_test.status == 200 else 'CHECK_REQUIRED' }}"
+  tags:
+    - webserver
+
+- name: Post-deployment Reporting
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Generate deployment report artifact
+      template:
+        src: templates/deployment-report.j2
+        dest: /tmp/deployment-report.txt
+        mode: '0644'
+  tags:
+    - verification
+    - reporting

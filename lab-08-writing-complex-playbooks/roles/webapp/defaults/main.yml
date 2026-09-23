@@ -1,0 +1,7 @@
+---
+app_name: "webapp"
+app_version: "1.0"
+database_host: "127.0.0.1"
+mysql_database: "webapp_db"
+mysql_user: "webapp_user"
+mysql_password: "WebApp123!"

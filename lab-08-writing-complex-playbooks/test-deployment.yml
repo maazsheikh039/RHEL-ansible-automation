@@ -1,0 +1,23 @@
+---
+- name: Test Database and Web Services State
+  hosts: all
+  become: yes
+  tasks:
+    - name: Test HTTP Service status
+      systemd:
+        name: httpd
+      register: apache_service
+
+    - name: Test Local Web Endpoint
+      uri:
+        url: "http://localhost/mywebapp/index.php"
+        method: GET
+        return_content: yes
+      register: web_response
+      ignore_errors: yes
+
+    - name: Display Test Verdict
+      debug:
+        msg: 
+          - "Apache Service: {{ apache_service.status.ActiveState }}"
+          - "Web App Reachability: {{ 'PASSED' if web_response.status == 200 else 'FAILED' }}"

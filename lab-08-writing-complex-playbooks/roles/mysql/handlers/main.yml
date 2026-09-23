@@ -1,0 +1,6 @@
+---
+- name: restart mysql
+  systemd:
+    name: mysqld
+    state: restarted
+  ignore_errors: yes
