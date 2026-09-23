@@ -1,0 +1,32 @@
+---
+- name: Immediate Handler Execution via Flush Handlers
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Update landing page HTML content
+      copy:
+        content: "<h1>Welcome to Ansible Automation Lab 7 - Updated</h1>\n"
+        dest: "{{ '/var/www/html/index.html' if ansible_os_family == 'RedHat' else '/var/www/html/index.html' }}"
+        mode: '0644'
+      notify: restart web service
+
+    - name: Force immediate execution of all notified handlers
+      meta: flush_handlers
+
+    - name: Test endpoint availability immediately after handler execution
+      uri:
+        url: "http://localhost:8080"
+        status_code: 200
+      register: web_test
+      ignore_errors: yes
+
+    - name: Display endpoint verification status
+      debug:
+        msg: "Web endpoint responded with status code {{ web_test.status | default('failed') }}"
+
+  handlers:
+    - name: restart web service
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: restarted

@@ -1,0 +1,33 @@
+---
+- name: Lab 7 Verification
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Check Nginx service state
+      systemd:
+        name: nginx
+      register: nginx_status
+      ignore_errors: yes
+
+    - name: Check HTTPD / Apache service state
+      systemd:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+      register: httpd_status
+      ignore_errors: yes
+
+    - name: Verify audit log file presence
+      stat:
+        path: /var/log/ansible_config_changes.log
+      register: audit_log_stat
+
+    - name: Display verification report
+      debug:
+        msg: |
+          ==================================================
+          LAB 07 VERIFICATION REPORT
+          ==================================================
+          - Nginx Service State: {{ nginx_status.status.ActiveState | default('N/A') }}
+          - Web Server Service State: {{ httpd_status.status.ActiveState | default('N/A') }}
+          - Handler Audit Log Created: {{ audit_log_stat.stat.exists }}
+          ==================================================

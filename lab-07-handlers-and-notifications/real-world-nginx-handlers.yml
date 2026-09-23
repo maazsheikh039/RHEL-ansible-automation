@@ -1,0 +1,45 @@
+---
+- name: Production Nginx Management with Robust Handlers
+  hosts: all
+  gather_facts: yes
+  vars:
+    nginx_port: 8081
+    
+  tasks:
+    - name: Install Nginx package
+      package:
+        name: nginx
+        state: present
+
+    - name: Deploy custom Nginx primary configuration
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: '0644'
+      notify:
+        - verify nginx syntax
+        - reload nginx service
+
+    - name: Ensure base web root directory exists
+      file:
+        path: /var/www/html
+        state: directory
+        mode: '0755'
+
+    - name: Deploy index landing page
+      copy:
+        content: "<h1>Production Nginx Server Configured via Handlers</h1>\n"
+        dest: /var/www/html/index.html
+        mode: '0644'
+
+  handlers:
+    - name: verify nginx syntax
+      command: nginx -t
+      register: nginx_syntax
+      changed_when: false
+
+    - name: reload nginx service
+      service:
+        name: nginx
+        state: reloaded
+      when: nginx_syntax is succeeded

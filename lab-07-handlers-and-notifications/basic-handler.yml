@@ -1,0 +1,38 @@
+---
+- name: Basic Handler Demo - Nginx/Apache Configuration
+  hosts: all
+  gather_facts: yes
+  vars:
+    http_port: "8080"
+    
+  tasks:
+    - name: Ensure HTTP web server is installed (CentOS/RHEL)
+      yum:
+        name: httpd
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure HTTP web server is installed (Ubuntu/Debian)
+      apt:
+        name: apache2
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Modify web server port configuration
+      lineinfile:
+        path: "{{ '/etc/httpd/conf/httpd.conf' if ansible_os_family == 'RedHat' else '/etc/apache2/ports.conf' }}"
+        regexp: '^Listen '
+        line: "Listen {{ http_port }}"
+      notify: restart web server
+
+    - name: Ensure web server service is enabled and running
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart web server
+      service:
+        name: "{{ 'httpd' if ansible_os_family == 'RedHat' else 'apache2' }}"
+        state: restarted
