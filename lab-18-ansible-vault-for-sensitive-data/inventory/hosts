@@ -1,0 +1,13 @@
+[development]
+localhost ansible_connection=local
+
+[production]
+localhost ansible_connection=local
+
+[webservers:children]
+development
+production
+
+[databases:children]
+development
+production
