@@ -1,0 +1,24 @@
+---
+- name: Lab 20 Verification Test Suite
+  hosts: localhost
+  gather_facts: yes
+
+  tasks:
+    - name: Test Monolithic Playbook Syntax
+      command: ansible-playbook large-playbook.yml --syntax-check
+
+    - name: Test Optimized Role Playbook Syntax
+      command: ansible-playbook optimized-playbook.yml --syntax-check
+
+    - name: Test Async Playbook Syntax
+      command: ansible-playbook async-optimization.yml --syntax-check
+
+    - name: Test Delegation Playbook Syntax
+      command: ansible-playbook delegation-optimization.yml --syntax-check
+
+    - name: Test Parallel Playbook Syntax
+      command: ansible-playbook parallel-optimization.yml --syntax-check
+
+    - name: Display Lab Completion Confirmation
+      debug:
+        msg: "Lab 20: Optimizing Playbooks and Performance completed successfully!"

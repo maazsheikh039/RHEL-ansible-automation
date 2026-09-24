@@ -1,0 +1,17 @@
+---
+- name: Parallel Execution Optimization
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+  strategy: free
+  
+  tasks:
+    - name: Create application directories simultaneously
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /opt/app1
+        - /opt/app2
+        - /opt/app3

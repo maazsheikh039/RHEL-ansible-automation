@@ -1,0 +1,27 @@
+---
+- name: Demonstrate Asynchronous Task Execution
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Start long-running package updates (async)
+      package:
+        name: '*'
+        state: latest
+      async: 300
+      poll: 0
+      register: package_update_job
+
+    - name: Perform interim configuration tasks
+      debug:
+        msg: "Executing concurrent tasks while package update runs in background..."
+
+    - name: Wait for package update completion
+      async_status:
+        jid: "{{ package_update_job.ansible_job_id }}"
+      register: package_result
+      until: package_result.finished
+      retries: 30
+      delay: 5
+      when: package_update_job.ansible_job_id is defined

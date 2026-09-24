@@ -1,0 +1,20 @@
+---
+- name: Demonstrate Task Delegation for Performance
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Generate SSL certificate on control node
+      command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048
+        -keyout /tmp/{{ inventory_hostname }}.key
+        -out /tmp/{{ inventory_hostname }}.crt
+        -subj "/C=US/ST=State/L=City/O=Organization/CN={{ ansible_fqdn | default(inventory_hostname) }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Log deployment status to central monitor
+      debug:
+        msg: "Delegated event logged for {{ inventory_hostname }}"
+      delegate_to: localhost

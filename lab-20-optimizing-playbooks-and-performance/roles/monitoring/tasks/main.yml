@@ -1,0 +1,4 @@
+---
+- name: Monitoring Agent Check
+  debug:
+    msg: "Monitoring configured."

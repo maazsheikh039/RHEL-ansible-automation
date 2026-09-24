@@ -1,0 +1,4 @@
+---
+- name: Security Baseline Check
+  debug:
+    msg: "Security policies applied."

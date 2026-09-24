@@ -1,0 +1,11 @@
+ServerRoot /etc/httpd
+Listen 80
+User apache
+Group apache
+ServerAdmin admin@{{ ansible_fqdn | default(inventory_hostname) }}
+ServerName {{ ansible_fqdn | default(inventory_hostname) }}
+DocumentRoot /var/www/html
+<Directory "/var/www/html">
+    AllowOverride None
+    Require all granted
+</Directory>

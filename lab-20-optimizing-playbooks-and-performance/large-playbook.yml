@@ -1,0 +1,24 @@
+---
+- name: Unoptimized Monolithic Application Stack
+  hosts: webservers
+  become: yes
+  gather_facts: yes
+  tasks:
+    - name: Install Apache Web Server
+      package:
+        name: httpd
+        state: present
+    - name: Configure Web Server Service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+    - name: Install MariaDB Database
+      package:
+        name: mariadb-server
+        state: present
+    - name: Configure Database Service
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
