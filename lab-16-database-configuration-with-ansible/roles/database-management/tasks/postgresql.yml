@@ -1,0 +1,24 @@
+---
+- name: Install PostgreSQL packages
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+
+- name: Start and enable PostgreSQL service
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Configure PostgreSQL
+  community.postgresql.postgresql_set:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+  become_user: postgres
+  loop:
+    - { name: "listen_addresses", value: "{{ postgresql_listen_addresses }}" }
+  notify: restart postgresql

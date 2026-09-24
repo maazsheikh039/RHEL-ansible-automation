@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+BACKUP_DIR="/opt/database-backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS="{{ backup_retention_days }}"
+
+mkdir -p "$BACKUP_DIR"
+
+sudo -u postgres pg_dumpall | gzip > "$BACKUP_DIR/postgresql_backup_$DATE.sql.gz"
+
+find "$BACKUP_DIR" -name "postgresql_backup_*.sql.gz" -mtime +"$RETENTION_DAYS" -delete
+
+echo "PostgreSQL backup completed: postgresql_backup_$DATE.sql.gz"

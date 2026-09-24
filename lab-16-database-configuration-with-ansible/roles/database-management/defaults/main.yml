@@ -1,0 +1,15 @@
+---
+database_type: mysql
+backup_enabled: true
+security_hardening: true
+backup_retention_days: 7
+backup_schedule_hour: 2
+backup_schedule_minute: 0
+
+mysql_root_password: "ChangeMe123!"
+mysql_port: 3306
+mysql_bind_address: "0.0.0.0"
+
+postgresql_version: "12"
+postgresql_port: 5432
+postgresql_listen_addresses: "*"

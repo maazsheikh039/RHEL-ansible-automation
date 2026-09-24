@@ -1,0 +1,8 @@
+---
+- name: Apply database-management role to PostgreSQL hosts
+  hosts: postgresql_servers
+  become: yes
+  vars:
+    database_type: postgresql
+  roles:
+    - database-management
