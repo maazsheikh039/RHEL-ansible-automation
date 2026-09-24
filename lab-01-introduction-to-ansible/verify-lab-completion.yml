@@ -1,0 +1,20 @@
+---
+- name: Lab 1 Verification Test Suite
+  hosts: local
+  gather_facts: yes
+
+  tasks:
+    - name: Verify Ansible Core Engine Version
+      debug:
+        msg: "Ansible Engine Version: {{ ansible_version.full }}"
+
+    - name: Test Ping Module Execution
+      ping:
+
+    - name: Confirm Localhost Facts Gathering
+      debug:
+        msg: "Control Node OS: {{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_hostname }})"
+
+    - name: Display Lab Completion Message
+      debug:
+        msg: "Lab 1: Introduction to Ansible completed successfully!"
