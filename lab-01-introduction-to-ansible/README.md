@@ -1,4 +1,4 @@
-# Lab 1: Introduction to Ansible
+# Introduction to Ansible
 
 ## Overview
 This directory contains the initial environment setup and foundational ad-hoc connectivity tests for Ansible automation on a Linux control node using local connection plugins.
