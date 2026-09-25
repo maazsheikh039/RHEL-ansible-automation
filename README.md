@@ -226,11 +226,15 @@ db_root_password: !vault |
 ```
 
 ---
+---
 
-## 📄 License & Verification
+## License & Legal Terms
 
-All playbooks, roles, and scripts in this repository are released under the [MIT License](LICENSE). 
+**Copyright (c) 2026 Maaz Ghufran. All Rights Reserved.**
 
-* **Maintainer:** DevOps & Automation Engineering Team
-* **Curriculum Standard:** Red Hat Enterprise Linux (RHEL) Automation with Ansible
-* **Portfolio Status:** Verified & Synchronized
+This repository and all associated files are the exclusive property of **Maaz Ghufran**.
+
+* **Permitted Use:** Viewing and reading the content solely for educational, assessment, or portfolio/hiring evaluation purposes.
+* **Restrictions:** Copying, reproducing, modifying, altering, distributing, sublicensing, or deploying any portion of this codebase without explicit written permission is strictly prohibited.
+
+For complete terms, please refer to the [LICENSE](./LICENSE) file.
